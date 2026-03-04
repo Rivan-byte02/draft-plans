@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DraftPlanEntryType {
+  BAN
+  PREFERRED
+}
+
+enum DraftPlanPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum BackgroundJobType {
+  HERO_SYNC
+}
+
+enum BackgroundJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model DraftPlan {
+  id          String               @id @default(cuid())
+  name        String
+  description String?
+  entries     DraftPlanHeroEntry[]
+  deletedAt   DateTime?            @map("deleted_at")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  @@index([deletedAt, updatedAt])
+  @@map("draft_plans")
+}
+
+model Hero {
+  id            Int                  @id
+  name          String
+  localizedName String               @map("localized_name")
+  primaryAttr   String?              @map("primary_attr")
+  attackType    String?              @map("attack_type")
+  roles         String[]
+  imageUrl      String?              @map("image_url")
+  iconUrl       String?              @map("icon_url")
+  entries       DraftPlanHeroEntry[]
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  @@map("heroes")
+}
+
+model HeroCacheState {
+  key                   String    @id
+  lastExternalRequestAt DateTime? @map("last_external_request_at")
+  lastSyncedAt          DateTime? @map("last_synced_at")
+  expiresAt             DateTime? @map("expires_at")
+  heroCount             Int       @default(0) @map("hero_count")
+  source                String?
+  lastError             String?   @map("last_error")
+  lastJobId             String?   @map("last_job_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("hero_cache_states")
+}
+
+model BackgroundJob {
+  id              String              @id @default(cuid())
+  type            BackgroundJobType
+  status          BackgroundJobStatus @default(QUEUED)
+  dedupeKey       String?             @map("dedupe_key")
+  payload         Json?
+  progress        Int                 @default(0)
+  progressMessage String?             @map("progress_message")
+  result          Json?
+  attempts        Int                 @default(0)
+  availableAt     DateTime            @default(now()) @map("available_at")
+  startedAt       DateTime?           @map("started_at")
+  completedAt     DateTime?           @map("completed_at")
+  lockedAt        DateTime?           @map("locked_at")
+  workerId        String?             @map("worker_id")
+  errorMessage    String?             @map("error_message")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@index([status, availableAt, createdAt])
+  @@index([type, status, createdAt])
+  @@index([dedupeKey, status, createdAt])
+  @@map("background_jobs")
+}
+
+model DraftPlanHeroEntry {
+  id          String             @id @default(cuid())
+  draftPlanId String             @map("draft_plan_id")
+  heroId      Int                @map("hero_id")
+  type        DraftPlanEntryType
+  role        String?
+  priority    DraftPlanPriority?
+  note        String?
+  deletedAt   DateTime?          @map("deleted_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  draftPlan   DraftPlan          @relation(fields: [draftPlanId], references: [id], onDelete: Cascade)
+  hero        Hero               @relation(fields: [heroId], references: [id], onDelete: Restrict)
+
+  @@index([draftPlanId, type])
+  @@index([draftPlanId, type, deletedAt])
+  @@map("draft_plan_hero_entries")
+}
