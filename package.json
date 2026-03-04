@@ -1,0 +1,28 @@
+{
+  "name": "draft-plans",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev:web",
+    "install:api": "npm --prefix apps/api install",
+    "install:web": "npm --prefix apps/web install",
+    "install:all": "npm run install:api && npm run install:web",
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "build": "npm run build:shared && npm run build:api && npm run build:web",
+    "build:shared": "npm --prefix packages/shared run build",
+    "db:setup": "npm --prefix apps/api run db:setup",
+    "db:setup:e2e": "npm --prefix apps/api run db:setup:e2e",
+    "db:repair": "npm --prefix apps/api run db:repair",
+    "db:status": "npm --prefix apps/api run prisma:migrate:status",
+    "typecheck:web": "npm --prefix apps/web run typecheck",
+    "typecheck:api": "npm --prefix apps/api run typecheck",
+    "test:e2e:api": "npm --prefix apps/api run test:e2e",
+    "test:e2e:api:prepare": "npm --prefix apps/api run test:e2e:prepare",
+    "test:e2e": "npm --prefix apps/web run test:e2e",
+    "test:e2e:headed": "npm --prefix apps/web run test:e2e:headed",
+    "test:e2e:ui": "npm --prefix apps/web run test:e2e:ui",
+    "test:e2e:install": "npm --prefix apps/web run test:e2e:install"
+  }
+}
