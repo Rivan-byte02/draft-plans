@@ -46,7 +46,6 @@ export function DraftPlanDetailsPage() {
       if (draftPlanId) {
         await invalidateDraftPlanQueries(draftPlanId);
       }
-      setHeroBrowserSection(null);
     },
   });
 
@@ -57,7 +56,6 @@ export function DraftPlanDetailsPage() {
       if (draftPlanId) {
         await invalidateDraftPlanQueries(draftPlanId);
       }
-      setHeroBrowserSection(null);
     },
   });
 
@@ -131,6 +129,20 @@ export function DraftPlanDetailsPage() {
     deletePreferredEntryMutation.isPending,
   ]);
 
+  const selectedHeroesById = useMemo(() => {
+    if (!draftPlanDetailsQuery.data) {
+      return {};
+    }
+
+    return Object.fromEntries([
+      ...draftPlanDetailsQuery.data.banList.map((entry) => [entry.heroId, 'BAN' as const]),
+      ...draftPlanDetailsQuery.data.preferredPicks.map((entry) => [
+        entry.heroId,
+        'PREFERRED' as const,
+      ]),
+    ]);
+  }, [draftPlanDetailsQuery.data]);
+
   if (!draftPlanId) {
     return (
       <div className="draft-page-shell">
@@ -170,7 +182,7 @@ export function DraftPlanDetailsPage() {
         </div>
 
         {draftPlanDetailsQuery.data ? (
-          <div className="draft-detail-stack">
+          <div className="draft-detail-columns">
             <BanListSection
               entries={draftPlanDetailsQuery.data.banList}
               isSaving={isAnyMutationPending}
@@ -203,6 +215,7 @@ export function DraftPlanDetailsPage() {
       <HeroBrowserModal
         isOpen={heroBrowserSection !== null}
         preferredAction={heroBrowserSection}
+        selectedHeroesById={selectedHeroesById}
         onClose={() => setHeroBrowserSection(null)}
         onBanHero={(hero) => addBanEntryMutation.mutateAsync(hero.id)}
         onPickHero={(hero) =>
