@@ -1,0 +1,42 @@
+{
+  "name": "draft-plans-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "build:e2e": "rm -rf dist-e2e && tsc -p tsconfig.e2e.json",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main",
+    "db:seed": "node scripts/run-with-root-env.mjs npx tsx prisma/seed.ts",
+    "db:setup": "node scripts/db-setup.mjs",
+    "db:setup:e2e": "node scripts/setup-e2e-db.mjs",
+    "db:repair": "node scripts/repair-databases.mjs",
+    "prisma:generate": "node scripts/run-with-root-env.mjs npx prisma generate --schema prisma/schema.prisma",
+    "prisma:migrate:deploy": "node scripts/run-with-root-env.mjs npx prisma migrate deploy --schema prisma/schema.prisma",
+    "prisma:migrate:status": "node scripts/run-with-root-env.mjs npx prisma migrate status --schema prisma/schema.prisma",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:e2e:prepare": "node test/e2e/scripts/prepare-e2e-db.mjs",
+    "test:e2e": "npm run test:e2e:prepare && npm run build:e2e && node --test --test-concurrency=1 dist-e2e/test/e2e/app.e2e-spec.js"
+  },
+  "dependencies": {
+    "@draft-plans/shared": "file:../../packages/shared",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/config": "^3.3.0",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@prisma/client": "^6.19.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.9",
+    "@nestjs/schematics": "^10.1.4",
+    "@types/node": "^22.13.10",
+    "prisma": "^6.19.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
