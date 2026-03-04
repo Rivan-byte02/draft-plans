@@ -15,6 +15,7 @@ type HeroAttributeFilter = 'ALL' | 'STR' | 'AGI' | 'INT' | 'UNI';
 type HeroBrowserModalProps = {
   isOpen: boolean;
   preferredAction: DraftPlanSection | null;
+  selectedHeroesById?: Record<number, DraftPlanSection>;
   onClose: () => void;
   onBanHero: (hero: HeroRecord) => Promise<unknown> | void;
   onPickHero: (hero: HeroRecord) => Promise<unknown> | void;
@@ -41,6 +42,7 @@ function normalizeHeroAttribute(primaryAttribute: string | null) {
 export function HeroBrowserModal({
   isOpen,
   preferredAction,
+  selectedHeroesById = {},
   onClose,
   onBanHero,
   onPickHero,
@@ -153,10 +155,14 @@ export function HeroBrowserModal({
             {filteredHeroes.map((hero) => {
               const heroImageUrl = getHeroAssetUrl(hero.imageUrl);
               const heroAttribute = normalizeHeroAttribute(hero.primaryAttr);
+              const selectedSection = selectedHeroesById[hero.id] ?? null;
+              const isUnavailable = selectedSection !== null;
+              const selectionLabel =
+                selectedSection === 'BAN' ? 'Already in ban list' : 'Already in preferred picks';
 
               return (
                 <article
-                  className="hero-browser-card"
+                  className={`hero-browser-card ${isUnavailable ? 'is-unavailable' : ''}`}
                   data-testid={`hero-card-${hero.id}`}
                   key={hero.id}
                 >
@@ -182,6 +188,9 @@ export function HeroBrowserModal({
                           </span>
                         ))}
                       </div>
+                      {isUnavailable ? (
+                        <p className="hero-selection-status">{selectionLabel}</p>
+                      ) : null}
                     </div>
                   </div>
                   <div className="hero-browser-card-actions">
@@ -190,7 +199,8 @@ export function HeroBrowserModal({
                         preferredAction === 'BAN' ? 'recommended' : ''
                       }`}
                       data-testid={`ban-hero-${hero.id}`}
-                      onClick={() => onBanHero(hero)}
+                      disabled={isUnavailable}
+                      onClick={() => void onBanHero(hero)}
                       type="button"
                     >
                       <BanIcon />
@@ -201,7 +211,8 @@ export function HeroBrowserModal({
                         preferredAction === 'PREFERRED' ? 'recommended' : ''
                       }`}
                       data-testid={`pick-hero-${hero.id}`}
-                      onClick={() => onPickHero(hero)}
+                      disabled={isUnavailable}
+                      onClick={() => void onPickHero(hero)}
                       type="button"
                     >
                       <StarIcon />

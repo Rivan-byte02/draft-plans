@@ -103,7 +103,12 @@ export function DraftPlansPage() {
             const previewEntries = [
               ...(draftPlanDetails?.banList ?? []),
               ...(draftPlanDetails?.preferredPicks ?? []),
-            ].slice(0, 5);
+            ];
+            const hiddenPreviewEntryCount = Math.max(previewEntries.length - 4, 0);
+            const visiblePreviewEntries = previewEntries.slice(
+              0,
+              hiddenPreviewEntryCount > 0 ? 3 : 4,
+            );
 
             return (
               <Link
@@ -115,13 +120,15 @@ export function DraftPlansPage() {
                 <div className="draft-plan-card-header">
                   <div>
                     <h3>{draftPlan.name}</h3>
-                    <p>{draftPlan.description || 'No description provided.'}</p>
+                    <p title={draftPlan.description || 'No description provided.'}>
+                      {draftPlan.description || 'No description provided.'}
+                    </p>
                   </div>
                 </div>
 
                 {previewEntries.length ? (
                   <div className="draft-plan-preview-row">
-                    {previewEntries.map((entry) => {
+                    {visiblePreviewEntries.map((entry) => {
                       const heroImageUrl = getHeroAssetUrl(entry.heroImageUrl);
 
                       return (
@@ -134,6 +141,14 @@ export function DraftPlansPage() {
                         </div>
                       );
                     })}
+                    {hiddenPreviewEntryCount > 0 ? (
+                      <div
+                        className="hero-thumb hero-thumb-overflow"
+                        title={`${hiddenPreviewEntryCount} more heroes`}
+                      >
+                        <span>+{hiddenPreviewEntryCount}</span>
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="draft-plan-preview-row draft-plan-preview-placeholder">
