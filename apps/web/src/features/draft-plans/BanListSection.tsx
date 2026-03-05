@@ -119,6 +119,7 @@ export function BanListSection({
                       {activeEntryId === entry.id && hasUnsavedChanges(entry) ? (
                         <button
                           className="entry-save-button"
+                          data-testid="ban-entry-save-button"
                           disabled={isSaving}
                           onClick={(event) => {
                             event.preventDefault();
@@ -148,6 +149,7 @@ export function BanListSection({
                     </div>
                   </div>
                   <input
+                    data-testid="ban-entry-note-input"
                     className="compact-entry-input ban-note-input"
                     placeholder="Add a ban note"
                     readOnly={activeEntryId !== entry.id || isSaving}

@@ -1,63 +1,61 @@
 # AI_LOG
 
-## Tool used
+## AI tool(s) used
 - Codex desktop coding agent (GPT-5 based)
 
-## Notes
-- AI assistance was used selectively during implementation.
-- The prompt records below are representative, not exhaustive.
-- They focus on scaffolding, debugging, testing, and implementation support.
+## Usage scope
+- AI was used as a supporting tool for scaffolding suggestions, debugging assistance, and test guidance.
+- Final implementation decisions, code integration, and validation were done manually in the repository.
 
-## Representative prompt records
+## First prompt
+- `Review the take-home PDF and summarize required features, deliverables, and a practical boilerplate + tech stack plan.`
 
-### 1. Backend scaffolding
-- Prompt
-  - `Build a dedicated backend API with NestJS, Prisma, PostgreSQL, and Docker Compose.`
-- Use
-  - Initial backend scaffolding and project structure.
-- Outcome
-  - Set up the API foundation, database integration, and containerized local development workflow.
+## Prompt records
+1. Prompt
+   - `Set up a dedicated backend API with NestJS, Prisma, PostgreSQL, and Docker Compose (no Supabase).`
+   - Use
+   - Initial project scaffolding and local containerized environment setup.
+2. Prompt
+   - `Refactor the project into a monorepo with frontend, backend, and shared contracts using clean naming conventions.`
+   - Use
+   - Repository structure alignment and codebase organization.
+3. Prompt
+   - `Help diagnose environment and dependency issues between API, Prisma, Docker, and local development.`
+   - Use
+   - Runtime debugging and setup consistency fixes.
+4. Prompt
+   - `Add and stabilize end-to-end tests using best-practice selectors and test structure.`
+   - Use
+   - Test planning and implementation support for frontend and backend E2E.
+5. Prompt
+   - `Design PostgreSQL-only caching and a PostgreSQL-backed long-running task flow without Redis or external queue services.`
+   - Use
+   - Architecture guidance and feature implementation support.
+6. Prompt
+   - `Add authentication and enforce user-level ownership so users can access only their own records.`
+   - Use
+   - Security and access-control implementation checklist.
 
-### 2. Monorepo and frontend scaffolding
-- Prompt
-  - `Refactor the project into a monorepo and add the frontend and shared workspace structure.`
-- Use
-  - Repository organization and frontend setup.
-- Outcome
-  - Created the `apps/api`, `apps/web`, and `packages/shared` structure and connected the frontend to the backend contracts.
+## Iterations to accepted result
+- 6 major implementation iterations (scaffolding, monorepo setup, environment fixes, testing, caching/jobs, authentication/ownership), followed by small refinements.
 
-### 3. UI implementation and refinement
-- Prompt
-  - `Refine the frontend layout so it matches the provided mockups and improve the reliability of the page behavior.`
-- Use
-  - Frontend styling, layout refinement, and behavior fixes.
-- Outcome
-  - Updated the draft plans interface, hero browser modal, and related UI flows.
+## Final accepted output
+- Monorepo fullstack solution with:
+  - React + Vite frontend (`apps/web`)
+  - NestJS + Prisma backend (`apps/api`)
+  - PostgreSQL persistence + migrations + seed + Docker Compose
+  - Draft plan CRUD flows (ban list and preferred picks)
+  - OpenDota hero integration
+  - PostgreSQL-only hero cache and background sync jobs
+  - Authentication and per-user record ownership
+  - Frontend and backend E2E test suites
 
-### 4. Bug fixing and environment debugging
-- Prompt
-  - `Fix the database, Docker, Prisma, and environment mismatches so the API, PostgreSQL, and local tools all point to the same instance.`
-- Use
-  - Debugging local development issues and runtime inconsistencies.
-- Outcome
-  - Standardized environment handling, database setup scripts, Docker port mapping, and local database access.
+## What AI prompts were used for
+- Scaffolding support
+- Debugging support
+- Test planning and stabilization
+- Targeted feature support (caching, background jobs, authentication, ownership)
 
-### 5. Testing support
-- Prompt
-  - `Add end-to-end tests for the frontend and backend and stabilize the selectors and test setup.`
-- Use
-  - Test implementation and reliability improvements.
-- Outcome
-  - Added Playwright coverage for frontend flows and backend E2E coverage for the API.
-
-### 6. Backend feature support
-- Prompt
-  - `Add PostgreSQL-backed caching, background job handling, and soft delete behavior to the backend.`
-- Use
-  - Implementation support for non-trivial backend behavior.
-- Outcome
-  - Added PostgreSQL-only cache metadata, PostgreSQL-backed long-running job processing, and soft delete for draft plans and entries.
-
-## Summary
-- AI was used as an implementation assistant for scaffolding, debugging, testing, and selected backend/frontend refinements.
-- Final code structure, configuration, and validation were reviewed and adjusted within the repository during development.
+## Custom AI instructions / agent files
+- No repository-local `agents.md` or `skills.md` file was used as a persistent instruction source during implementation.
+- Session-level runtime instructions were used in the coding assistant environment.

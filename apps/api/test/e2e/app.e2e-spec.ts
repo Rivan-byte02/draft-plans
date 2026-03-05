@@ -219,7 +219,11 @@ describe('draft plans api e2e', () => {
         activeJobId: string | null;
       }>('/heroes/cache');
 
-      if (response.body.freshness !== 'FRESH' || response.body.heroCount !== 5) {
+      if (
+        response.body.freshness !== 'FRESH' ||
+        response.body.heroCount !== 5 ||
+        response.body.activeJobId !== null
+      ) {
         throw new Error('Hero cache is not refreshed yet');
       }
 

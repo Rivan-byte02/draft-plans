@@ -9,11 +9,10 @@ Monorepo foundation for a Dota 2 Draft Plans app with a React frontend and a ded
 
 ## Local setup
 1. Copy `.env.example` to `.env`.
-2. Run `npm run install:all` if you want local `node_modules` inside both `apps/api` and `apps/web`.
-3. Run `npm run db:setup` if you are running the API outside Docker.
-4. Run `docker compose up --build`.
-5. Open `http://localhost:3000/health` to verify the API is running.
-6. Open `http://localhost:5173` to use the frontend.
+2. Run `npm run install:all`.
+3. Run `docker compose up --build`.
+4. Run `npm run db:setup` (single command to migrate + seed for local DB initialization).
+5. Open `http://localhost:5173` and verify API health at `http://localhost:3000/health`.
 
 ## Notes
 - Database initialization and seeding run automatically in the API container entrypoint.
@@ -24,7 +23,7 @@ Monorepo foundation for a Dota 2 Draft Plans app with a React frontend and a ded
 - Draft plan deletes and draft plan entry deletes use soft delete via `deleted_at`, not hard delete.
 - The frontend consumes the backend through typed contracts from `packages/shared`.
 - Dependencies are installed per app, so `apps/api/node_modules` and `apps/web/node_modules` are both expected after local install or Docker build.
-- Required submission docs are included: `DESIGN.md`, `schema.dbml`, and `AI_LOG.md`.
+- Required submission docs are included: `DESIGN.md`, `schema.dml` (Dbdiagram DBML), and `AI_LOG.md`.
 - Hero metadata uses PostgreSQL-backed server-side caching with TTL metadata in `hero_cache_states`.
 - Long-running hero refresh jobs use a PostgreSQL-backed queue in `background_jobs`, processed by the API worker without Redis or other queue infrastructure.
 - Authentication is enabled with bearer tokens. Protected API routes require `Authorization: Bearer <accessToken>`.

@@ -166,6 +166,7 @@ export function PreferredPicksSection({
                         {activeEntryId === entry.id && hasUnsavedChanges(entry) ? (
                           <button
                             className="entry-save-button"
+                            data-testid="preferred-entry-save-button"
                             disabled={isSaving}
                             onClick={(event) => {
                               event.preventDefault();
@@ -196,6 +197,7 @@ export function PreferredPicksSection({
                     </div>
                     <div className="preferred-entry-field-row">
                       <input
+                        data-testid="preferred-entry-role-input"
                         className="compact-entry-input compact-role-input"
                         placeholder="Role"
                         readOnly={activeEntryId !== entry.id || isSaving}
@@ -211,6 +213,7 @@ export function PreferredPicksSection({
                         }
                       />
                       <select
+                        data-testid="preferred-entry-priority-select"
                         className={`compact-entry-input compact-priority-select priority-${currentFormState.priority.toLowerCase()}`}
                         disabled={activeEntryId !== entry.id || isSaving}
                         value={currentFormState.priority}
@@ -232,6 +235,7 @@ export function PreferredPicksSection({
                       </select>
                     </div>
                     <input
+                      data-testid="preferred-entry-note-input"
                       className="compact-entry-input preferred-note-input"
                       placeholder="Add note..."
                       readOnly={activeEntryId !== entry.id || isSaving}

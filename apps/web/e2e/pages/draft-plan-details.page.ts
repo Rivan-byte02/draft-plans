@@ -46,42 +46,84 @@ export class DraftPlanDetailsPage {
       .first();
   }
 
-  async addBan(heroName: string) {
-    await this.page.getByTestId('open-ban-hero-browser-button').click();
+  async closeHeroBrowserIfOpen() {
+    const isHeroBrowserOpen = await this.heroBrowserModal.isVisible().catch(() => false);
+    if (!isHeroBrowserOpen) {
+      return;
+    }
+
+    await this.page.getByRole('button', { name: 'Close hero browser' }).click();
+    await expect(this.heroBrowserModal).toHaveCount(0);
+  }
+
+  async addBan(heroName: string, options?: { keepHeroBrowserOpen?: boolean }) {
+    const isHeroBrowserOpen = await this.heroBrowserModal.isVisible().catch(() => false);
+    if (!isHeroBrowserOpen) {
+      await this.page.getByTestId('open-ban-hero-browser-button').click();
+    }
+
     await expect(this.heroBrowserModal).toBeVisible();
     await this.page.getByTestId('hero-search-input').fill(heroName);
-    await this.heroCardByName(heroName).getByRole('button', { name: 'Ban' }).click();
-    await expect(this.heroBrowserModal).toHaveCount(0);
+    const heroCard = this.heroCardByName(heroName);
+    await heroCard.getByRole('button', { name: 'Ban' }).click();
+    await expect(heroCard.getByRole('button', { name: 'Ban' })).toBeDisabled();
+    await expect(heroCard.getByRole('button', { name: 'Pick' })).toBeDisabled();
+
+    if (!options?.keepHeroBrowserOpen) {
+      await this.page.getByRole('button', { name: 'Close hero browser' }).click();
+      await expect(this.heroBrowserModal).toHaveCount(0);
+    }
+
     await expect(this.banEntryByHeroName(heroName)).toBeVisible();
   }
 
-  async addPreferredPick(heroName: string) {
-    await this.page.getByTestId('open-preferred-pick-hero-browser-button').click();
+  async addPreferredPick(heroName: string, options?: { keepHeroBrowserOpen?: boolean }) {
+    const isHeroBrowserOpen = await this.heroBrowserModal.isVisible().catch(() => false);
+    if (!isHeroBrowserOpen) {
+      await this.page.getByTestId('open-preferred-pick-hero-browser-button').click();
+    }
+
     await expect(this.heroBrowserModal).toBeVisible();
     await this.page.getByTestId('hero-search-input').fill(heroName);
-    await this.heroCardByName(heroName).getByRole('button', { name: 'Pick' }).click();
-    await expect(this.heroBrowserModal).toHaveCount(0);
+    const heroCard = this.heroCardByName(heroName);
+    await heroCard.getByRole('button', { name: 'Pick' }).click();
+    await expect(heroCard.getByRole('button', { name: 'Ban' })).toBeDisabled();
+    await expect(heroCard.getByRole('button', { name: 'Pick' })).toBeDisabled();
+
+    if (!options?.keepHeroBrowserOpen) {
+      await this.page.getByRole('button', { name: 'Close hero browser' }).click();
+      await expect(this.heroBrowserModal).toHaveCount(0);
+    }
+
     await expect(this.preferredEntryByHeroName(heroName)).toBeVisible();
   }
 
   async saveBanNote(heroName: string, note: string) {
     const banEntry = this.banEntryByHeroName(heroName);
-    await banEntry.getByLabel('Note').fill(note);
-    await banEntry.getByRole('button', { name: 'Save Note' }).click();
-    await expect(banEntry.getByLabel('Note')).toHaveValue(note);
+    await banEntry.click();
+
+    const noteInput = banEntry.getByTestId('ban-entry-note-input');
+    await noteInput.fill(note);
+    await banEntry.getByTestId('ban-entry-save-button').click();
+    await expect(noteInput).toHaveValue(note);
   }
 
   async savePreferredPick(heroName: string, input: PreferredPickFormInput) {
     const preferredEntry = this.preferredEntryByHeroName(heroName);
+    await preferredEntry.click();
 
-    await preferredEntry.getByLabel('Role').fill(input.role);
-    await preferredEntry.getByLabel('Priority').selectOption(input.priority);
-    await preferredEntry.getByLabel('Note').fill(input.note);
-    await preferredEntry.getByRole('button', { name: 'Save Changes' }).click();
+    const roleInput = preferredEntry.getByTestId('preferred-entry-role-input');
+    const prioritySelect = preferredEntry.getByTestId('preferred-entry-priority-select');
+    const noteInput = preferredEntry.getByTestId('preferred-entry-note-input');
 
-    await expect(preferredEntry.getByLabel('Role')).toHaveValue(input.role);
-    await expect(preferredEntry.getByLabel('Priority')).toHaveValue(input.priority);
-    await expect(preferredEntry.getByLabel('Note')).toHaveValue(input.note);
+    await roleInput.fill(input.role);
+    await prioritySelect.selectOption(input.priority);
+    await noteInput.fill(input.note);
+    await preferredEntry.getByTestId('preferred-entry-save-button').click();
+
+    await expect(roleInput).toHaveValue(input.role);
+    await expect(prioritySelect).toHaveValue(input.priority);
+    await expect(noteInput).toHaveValue(input.note);
   }
 
   async goBackToOverview() {

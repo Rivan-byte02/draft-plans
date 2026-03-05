@@ -1,0 +1,115 @@
+Enum draft_plan_entry_type {
+  BAN
+  PREFERRED
+}
+
+Enum draft_plan_priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+Enum background_job_type {
+  HERO_SYNC
+}
+
+Enum background_job_status {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+Table draft_plans {
+  id varchar [pk]
+  owner_id varchar [not null]
+  name varchar [not null]
+  description text
+  deleted_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table users {
+  id varchar [pk]
+  email varchar [not null, unique]
+  name varchar [not null]
+  password_hash text [not null]
+  deleted_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table heroes {
+  id int [pk, note: 'OpenDota hero ID']
+  name varchar [not null, note: 'Canonical OpenDota internal name']
+  localized_name varchar [not null]
+  primary_attr varchar
+  attack_type varchar
+  roles text[] [not null]
+  image_url varchar
+  icon_url varchar
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table hero_cache_states {
+  key varchar [pk, note: 'Logical cache key, currently open-dota-heroes']
+  last_external_request_at timestamp
+  last_synced_at timestamp
+  expires_at timestamp
+  hero_count int [not null, default: 0]
+  source varchar
+  last_error text
+  last_job_id varchar
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table background_jobs {
+  id varchar [pk]
+  type background_job_type [not null]
+  status background_job_status [not null]
+  dedupe_key varchar
+  payload json
+  progress int [not null, default: 0]
+  progress_message text
+  result json
+  attempts int [not null, default: 0]
+  available_at timestamp [not null]
+  started_at timestamp
+  completed_at timestamp
+  locked_at timestamp
+  worker_id varchar
+  error_message text
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  indexes {
+    (status, available_at, created_at)
+    (type, status, created_at)
+    (dedupe_key, status, created_at)
+  }
+}
+
+Table draft_plan_hero_entries {
+  id varchar [pk]
+  draft_plan_id varchar [not null]
+  hero_id int [not null]
+  type draft_plan_entry_type [not null]
+  role varchar
+  priority draft_plan_priority
+  note text
+  deleted_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  indexes {
+    (draft_plan_id, type)
+    (draft_plan_id, type, deleted_at)
+  }
+}
+
+Ref: draft_plan_hero_entries.draft_plan_id > draft_plans.id [delete: cascade]
+Ref: draft_plan_hero_entries.hero_id > heroes.id
+Ref: draft_plans.owner_id > users.id

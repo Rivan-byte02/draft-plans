@@ -30,14 +30,16 @@ test.describe('draft plans e2e', () => {
 
     await draftPlanDetailsPage.expectLoaded(draftPlanName);
 
-    await draftPlanDetailsPage.addBan('Bane');
+    await draftPlanDetailsPage.addBan('Bane', { keepHeroBrowserOpen: true });
+    await draftPlanDetailsPage.addPreferredPick('Axe', { keepHeroBrowserOpen: true });
+    await draftPlanDetailsPage.closeHeroBrowserIfOpen();
+
     await draftPlanDetailsPage.saveBanNote(
       'Bane',
       'Ban reliable control to preserve a tempo-heavy composition.',
     );
 
-    await draftPlanDetailsPage.addPreferredPick('Anti-Mage');
-    await draftPlanDetailsPage.savePreferredPick('Anti-Mage', {
+    await draftPlanDetailsPage.savePreferredPick('Axe', {
       role: 'Carry',
       priority: 'HIGH',
       note: 'Play for an item timing and protect the lane equilibrium.',
