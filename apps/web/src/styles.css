@@ -1211,8 +1211,6 @@ img {
   .overview-create-button,
   .modal-action-row > .primary-button,
   .modal-action-row > .secondary-button {
-  .modal-action-row > .primary-button,
-  .modal-action-row > .secondary-button {
     width: 100%;
   }
 

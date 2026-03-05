@@ -147,23 +147,7 @@ export function PreferredPicksSection({
                 onBlur={(event) => handleEntryBlur(event, entry)}
                 onClick={() => void handleEntryClick(entry)}
                 tabIndex={0}
-                onBlur={(event) => handleEntryBlur(event, entry)}
-                onClick={() => void handleEntryClick(entry)}
-                tabIndex={0}
               >
-                <div className="compact-entry-main preferred-entry-main">
-                  <div className="strategy-entry-thumb compact-entry-thumb">
-                    {getHeroAssetUrl(entry.heroImageUrl) ? (
-                      <img
-                        alt={entry.heroName}
-                        src={getHeroAssetUrl(entry.heroImageUrl) ?? undefined}
-                      />
-                    ) : (
-                      <span>{entry.heroName.charAt(0)}</span>
-                    )}
-                  </div>
-                  <div className="compact-entry-content">
-                    <div className="compact-entry-title-row">
                 <div className="compact-entry-main preferred-entry-main">
                   <div className="strategy-entry-thumb compact-entry-thumb">
                     {getHeroAssetUrl(entry.heroImageUrl) ? (
@@ -251,10 +235,7 @@ export function PreferredPicksSection({
                       </select>
                     </div>
                     <input
-<<<<<<< HEAD
                       data-testid="preferred-entry-note-input"
-=======
->>>>>>> 8b0e28807e278481c2a0b13ef9f25ebdd54cef4b
                       className="compact-entry-input preferred-note-input"
                       placeholder="Add note..."
                       readOnly={activeEntryId !== entry.id || isSaving}
