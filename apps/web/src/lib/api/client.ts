@@ -1,3 +1,5 @@
+import { getStoredAccessToken } from '@/lib/auth/session-storage';
+
 const defaultApiBaseUrl = 'http://localhost:3000';
 
 export class ApiError extends Error {
@@ -18,9 +20,12 @@ export async function apiRequest<TResponse>(
   path: string,
   init?: RequestInit,
 ): Promise<TResponse> {
+  const accessToken = getStoredAccessToken();
+
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(init?.headers ?? {}),
     },
     ...init,

@@ -1,11 +1,46 @@
 import { DraftPlanEntryType, DraftPlanPriority, PrismaClient } from '@prisma/client';
+import { hashPassword } from '../src/auth/password-hash.util';
 
 const prisma = new PrismaClient();
 const heroCacheKey = 'open-dota-heroes';
+const demoUserEmail = 'demo@draftplans.dev';
+const demoUserPassword = 'demo12345';
+const rivalUserEmail = 'rival@draftplans.dev';
+const rivalUserPassword = 'rival12345';
 
 async function main() {
   const now = new Date();
   const cacheExpiresAt = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const demoUser = await prisma.user.upsert({
+    where: { email: demoUserEmail },
+    update: {
+      name: 'Demo User',
+      passwordHash: hashPassword(demoUserPassword),
+      deletedAt: null,
+    },
+    create: {
+      id: 'seed-user-local',
+      email: demoUserEmail,
+      name: 'Demo User',
+      passwordHash: hashPassword(demoUserPassword),
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: rivalUserEmail },
+    update: {
+      name: 'Rival User',
+      passwordHash: hashPassword(rivalUserPassword),
+      deletedAt: null,
+    },
+    create: {
+      id: 'seed-user-rival',
+      email: rivalUserEmail,
+      name: 'Rival User',
+      passwordHash: hashPassword(rivalUserPassword),
+    },
+  });
 
   await prisma.hero.upsert({
     where: { id: 1 },
@@ -55,12 +90,14 @@ async function main() {
   const plan = await prisma.draftPlan.upsert({
     where: { id: 'sample-draft-plan' },
     update: {
+      ownerId: demoUser.id,
       name: 'Sample Captain Mode Plan',
       description: 'Baseline seeded plan for local development.',
       deletedAt: null,
     },
     create: {
       id: 'sample-draft-plan',
+      ownerId: demoUser.id,
       name: 'Sample Captain Mode Plan',
       description: 'Baseline seeded plan for local development.',
     },

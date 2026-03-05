@@ -1,9 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import type { PropsWithChildren } from 'react';
+import { useAuth } from '@/features/auth/AuthProvider';
 import { ArrowLeftIcon, ShieldIcon } from './Icons';
 
 export function AppShell({ children }: PropsWithChildren) {
   const location = useLocation();
+  const { session, logout } = useAuth();
   const isDetailsPage = location.pathname.startsWith('/draft-plans/');
 
   return (
@@ -20,6 +22,14 @@ export function AppShell({ children }: PropsWithChildren) {
                 <ArrowLeftIcon />
                 <span>All Plans</span>
               </Link>
+            ) : null}
+            {session ? (
+              <div className="header-auth-actions">
+                <span className="header-auth-user">{session.user.name}</span>
+                <button className="header-logout-button" onClick={logout} type="button">
+                  Sign out
+                </button>
+              </div>
             ) : null}
           </div>
         </header>

@@ -17,6 +17,7 @@ export class ApiTestApp {
   readonly app: INestApplication;
   readonly prisma: PrismaClient;
   readonly baseUrl: string;
+  private accessToken: string | null = null;
 
   private constructor(app: INestApplication, prisma: PrismaClient, baseUrl: string) {
     this.app = app;
@@ -48,12 +49,16 @@ export class ApiTestApp {
     path: string,
     init?: Omit<RequestInit, 'body'> & { body?: Record<string, unknown> },
   ): Promise<ApiTestResponse<TBody>> {
+    const headers = new Headers(init?.headers);
+    headers.set('Content-Type', 'application/json');
+
+    if (this.accessToken && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${this.accessToken}`);
+    }
+
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(init?.headers ?? {}),
-      },
+      headers,
       body: init?.body ? JSON.stringify(init.body) : undefined,
     });
 
@@ -68,5 +73,9 @@ export class ApiTestApp {
 
   async close() {
     await this.app.close();
+  }
+
+  setAccessToken(nextAccessToken: string | null) {
+    this.accessToken = nextAccessToken;
   }
 }

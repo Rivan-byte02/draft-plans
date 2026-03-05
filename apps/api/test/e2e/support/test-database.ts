@@ -13,5 +13,6 @@ export async function resetTestDatabase(prisma: PrismaClient) {
     prisma.draftPlan.deleteMany(),
     prisma.heroCacheState.deleteMany(),
     prisma.hero.deleteMany(),
+    prisma.user.deleteMany(),
   ] satisfies Prisma.PrismaPromise<unknown>[]);
 }

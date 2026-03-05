@@ -1,6 +1,20 @@
 import { DraftPlanEntryType, DraftPlanPriority, type PrismaClient } from '@prisma/client';
+import { hashPassword } from '../../../src/auth/password-hash.util';
 
 const heroCacheKey = 'open-dota-heroes';
+export const demoUserFixture = {
+  id: 'test-user-demo',
+  email: 'demo@draftplans.dev',
+  name: 'Demo User',
+  password: 'demo12345',
+};
+
+export const rivalUserFixture = {
+  id: 'test-user-rival',
+  email: 'rival@draftplans.dev',
+  name: 'Rival User',
+  password: 'rival12345',
+};
 
 export const externalHeroesFixture = [
   {
@@ -28,6 +42,24 @@ export const externalHeroesFixture = [
 export async function seedBaseData(prisma: PrismaClient) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const demoUser = await prisma.user.create({
+    data: {
+      id: demoUserFixture.id,
+      email: demoUserFixture.email,
+      name: demoUserFixture.name,
+      passwordHash: hashPassword(demoUserFixture.password),
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      id: rivalUserFixture.id,
+      email: rivalUserFixture.email,
+      name: rivalUserFixture.name,
+      passwordHash: hashPassword(rivalUserFixture.password),
+    },
+  });
 
   await prisma.hero.createMany({
     data: [
@@ -67,6 +99,7 @@ export async function seedBaseData(prisma: PrismaClient) {
   const sampleDraftPlan = await prisma.draftPlan.create({
     data: {
       id: 'sample-draft-plan',
+      ownerId: demoUser.id,
       name: 'Sample Captain Mode Plan',
       description: 'Baseline seeded plan for local development.',
     },

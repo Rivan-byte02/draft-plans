@@ -8,18 +8,28 @@ type CreateDraftPlanInput = {
 export class DraftPlansPage {
   readonly page: Page;
   readonly heading: Locator;
+  readonly loginForm: Locator;
   readonly openCreateDraftPlanButton: Locator;
   readonly createDraftPlanForm: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.heading = page.getByRole('heading', { name: 'Draft Plans', level: 1 });
+    this.loginForm = page.getByTestId('login-form');
     this.openCreateDraftPlanButton = page.getByTestId('open-create-draft-plan-button');
     this.createDraftPlanForm = page.getByTestId('create-draft-plan-form');
   }
 
   async goto() {
     await this.page.goto('/draft-plans');
+    const isLoginPageVisible = await this.loginForm.isVisible().catch(() => false);
+
+    if (isLoginPageVisible) {
+      await this.page.getByTestId('login-email-input').fill('demo@draftplans.dev');
+      await this.page.getByTestId('login-password-input').fill('demo12345');
+      await this.page.getByTestId('login-submit-button').click();
+    }
+
     await expect(this.heading).toBeVisible();
   }
 

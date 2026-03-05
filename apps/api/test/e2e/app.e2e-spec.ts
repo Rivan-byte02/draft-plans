@@ -3,9 +3,15 @@ import { after, before, beforeEach, describe, it } from 'node:test';
 import type { PrismaClient } from '@prisma/client';
 import { ApiTestApp } from './support/api-test-app';
 import { ExternalHeroesApiStub } from './support/external-heroes-api.stub';
-import { externalHeroesFixture, seedBaseData } from './support/fixtures';
+import {
+  demoUserFixture,
+  externalHeroesFixture,
+  rivalUserFixture,
+  seedBaseData,
+} from './support/fixtures';
 import { applyTestEnvironment } from './support/test-env';
 import { createTestPrismaClient, resetTestDatabase } from './support/test-database';
+import { hashPassword } from '../../src/auth/password-hash.util';
 
 async function waitFor<TValue>(
   action: () => Promise<TValue>,
@@ -70,9 +76,31 @@ describe('draft plans api e2e', () => {
     externalHeroesApiStub.setSuccessResponse(externalHeroesFixture);
     externalHeroesApiStub.setResponseDelay(0);
     externalHeroesApiStub.resetRequestCount();
+
+    const loginResponse = await apiTestApp.request<{
+      accessToken: string;
+      expiresAt: string;
+      tokenType: 'Bearer';
+      user: {
+        id: string;
+        email: string;
+      };
+    }>('/auth/login', {
+      method: 'POST',
+      body: {
+        email: demoUserFixture.email,
+        password: demoUserFixture.password,
+      },
+    });
+
+    assert.equal(loginResponse.status, 201);
+    assert.equal(loginResponse.body.tokenType, 'Bearer');
+    assert.equal(loginResponse.body.user.email, demoUserFixture.email);
+    apiTestApp.setAccessToken(loginResponse.body.accessToken);
   });
 
   it('GET /health returns service status', async () => {
+    apiTestApp.setAccessToken(null);
     const response = await apiTestApp.request('/health');
 
     assert.equal(response.status, 200);
@@ -80,6 +108,48 @@ describe('draft plans api e2e', () => {
       status: 'ok',
       service: 'draft-plans-api',
     });
+  });
+
+  it('POST /auth/login returns a bearer session token', async () => {
+    apiTestApp.setAccessToken(null);
+    const response = await apiTestApp.request<{
+      accessToken: string;
+      tokenType: 'Bearer';
+      user: { email: string };
+    }>('/auth/login', {
+      method: 'POST',
+      body: {
+        email: demoUserFixture.email,
+        password: demoUserFixture.password,
+      },
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.tokenType, 'Bearer');
+    assert.ok(response.body.accessToken.length > 20);
+    assert.equal(response.body.user.email, demoUserFixture.email);
+  });
+
+  it('POST /auth/login rejects invalid credentials', async () => {
+    apiTestApp.setAccessToken(null);
+    const response = await apiTestApp.request<{ message: string }>('/auth/login', {
+      method: 'POST',
+      body: {
+        email: demoUserFixture.email,
+        password: 'wrong-password',
+      },
+    });
+
+    assert.equal(response.status, 401);
+    assert.equal(response.body.message, 'Invalid email or password');
+  });
+
+  it('rejects unauthenticated requests on protected routes', async () => {
+    apiTestApp.setAccessToken(null);
+    const response = await apiTestApp.request<{ message: string }>('/draft-plans');
+
+    assert.equal(response.status, 401);
+    assert.equal(response.body.message, 'Authorization header is required');
   });
 
   it('GET /heroes returns the seeded hero list', async () => {
@@ -163,6 +233,26 @@ describe('draft plans api e2e', () => {
 
   it('POST /heroes/sync syncs heroes from the external heroes source', async () => {
     await resetTestDatabase(testPrisma);
+    await testPrisma.user.create({
+      data: {
+        id: demoUserFixture.id,
+        email: demoUserFixture.email,
+        name: demoUserFixture.name,
+        passwordHash: hashPassword(demoUserFixture.password),
+      },
+    });
+
+    apiTestApp.setAccessToken(null);
+    const loginResponse = await apiTestApp.request<{ accessToken: string }>('/auth/login', {
+      method: 'POST',
+      body: {
+        email: demoUserFixture.email,
+        password: demoUserFixture.password,
+      },
+    });
+
+    assert.equal(loginResponse.status, 201);
+    apiTestApp.setAccessToken(loginResponse.body.accessToken);
 
     const response = await apiTestApp.request<{
       syncedCount: number;
@@ -268,6 +358,15 @@ describe('draft plans api e2e', () => {
   });
 
   it('GET /draft-plans returns seeded summaries', async () => {
+    await testPrisma.draftPlan.create({
+      data: {
+        id: 'rival-draft-plan',
+        ownerId: rivalUserFixture.id,
+        name: 'Rival Draft Plan',
+        description: 'Should not be visible to other users.',
+      },
+    });
+
     const response = await apiTestApp.request<
       Array<{ id: string; name: string; banCount: number; preferredPickCount: number }>
     >('/draft-plans');
@@ -278,6 +377,28 @@ describe('draft plans api e2e', () => {
     assert.equal(response.body[0]?.name, 'Sample Captain Mode Plan');
     assert.equal(response.body[0]?.banCount, 1);
     assert.equal(response.body[0]?.preferredPickCount, 1);
+    assert.equal(
+      response.body.some((draftPlan) => draftPlan.id === 'rival-draft-plan'),
+      false,
+    );
+  });
+
+  it('GET /draft-plans/:id returns 404 for records owned by another user', async () => {
+    const rivalPlan = await testPrisma.draftPlan.create({
+      data: {
+        id: 'rival-only-plan',
+        ownerId: rivalUserFixture.id,
+        name: 'Rival Only Plan',
+        description: 'Owned by a different account.',
+      },
+    });
+
+    const response = await apiTestApp.request<{ message: string }>(
+      `/draft-plans/${rivalPlan.id}`,
+    );
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.message, 'Draft plan not found');
   });
 
   it('POST /draft-plans creates a new draft plan', async () => {

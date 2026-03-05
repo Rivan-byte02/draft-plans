@@ -22,8 +22,19 @@ Enum background_job_status {
 
 Table draft_plans {
   id varchar [pk]
+  owner_id varchar [not null]
   name varchar [not null]
   description text
+  deleted_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table users {
+  id varchar [pk]
+  email varchar [not null, unique]
+  name varchar [not null]
+  password_hash text [not null]
   deleted_at timestamp
   created_at timestamp [not null]
   updated_at timestamp [not null]
@@ -101,3 +112,4 @@ Table draft_plan_hero_entries {
 
 Ref: draft_plan_hero_entries.draft_plan_id > draft_plans.id [delete: cascade]
 Ref: draft_plan_hero_entries.hero_id > heroes.id
+Ref: draft_plans.owner_id > users.id

@@ -27,6 +27,11 @@ Monorepo foundation for a Dota 2 Draft Plans app with a React frontend and a ded
 - Required submission docs are included: `DESIGN.md`, `schema.dbml`, and `AI_LOG.md`.
 - Hero metadata uses PostgreSQL-backed server-side caching with TTL metadata in `hero_cache_states`.
 - Long-running hero refresh jobs use a PostgreSQL-backed queue in `background_jobs`, processed by the API worker without Redis or other queue infrastructure.
+- Authentication is enabled with bearer tokens. Protected API routes require `Authorization: Bearer <accessToken>`.
+- Seeded local users:
+  - `demo@draftplans.dev` / `demo12345`
+  - `rival@draftplans.dev` / `rival12345`
+- Draft plan records are user-scoped through `draft_plans.owner_id`, so users can only access their own plans.
 
 ## End-to-end testing
 - The E2E suite uses Playwright from `apps/web/e2e`.
@@ -57,3 +62,8 @@ Monorepo foundation for a Dota 2 Draft Plans app with a React frontend and a ded
 - `POST /heroes/sync` performs an immediate sync.
 - `POST /heroes/sync-jobs` enqueues an asynchronous hero sync job.
 - `GET /heroes/sync-jobs/:jobId` returns job progress and completion state stored in PostgreSQL.
+
+## Authentication
+- `POST /auth/login` returns an access token and the authenticated user profile.
+- Health check (`GET /health`) and login (`POST /auth/login`) are public endpoints.
+- All other API routes require a bearer token.

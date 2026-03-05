@@ -27,9 +27,10 @@ import { UpdatePreferredPickDto } from './dto/update-preferred-pick.dto';
 export class DraftPlansService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listDraftPlans(): Promise<DraftPlanSummary[]> {
+  async listDraftPlans(ownerId: string): Promise<DraftPlanSummary[]> {
     const plans = await this.prisma.draftPlan.findMany({
       where: {
+        ownerId,
         deletedAt: null,
       },
       include: {
@@ -46,25 +47,30 @@ export class DraftPlansService {
     return plans.map(toDraftPlanSummary);
   }
 
-  async createDraftPlan(dto: CreateDraftPlanDto): Promise<DraftPlanDetails> {
+  async createDraftPlan(ownerId: string, dto: CreateDraftPlanDto): Promise<DraftPlanDetails> {
     const plan = await this.prisma.draftPlan.create({
       data: {
+        ownerId,
         name: dto.name,
         description: dto.description,
       },
     });
 
-    return this.getDraftPlan(plan.id);
+    return this.getDraftPlan(ownerId, plan.id);
   }
 
-  async deleteDraftPlan(id: string) {
-    await this.assertPlanExists(id);
+  async deleteDraftPlan(ownerId: string, id: string) {
+    await this.assertPlanExists(ownerId, id);
 
     const deletedAt = new Date();
 
     await this.prisma.$transaction([
-      this.prisma.draftPlan.update({
-        where: { id },
+      this.prisma.draftPlan.updateMany({
+        where: {
+          id,
+          ownerId,
+          deletedAt: null,
+        },
         data: { deletedAt },
       }),
       this.prisma.draftPlanHeroEntry.updateMany({
@@ -82,10 +88,11 @@ export class DraftPlansService {
     };
   }
 
-  async getDraftPlan(id: string): Promise<DraftPlanDetails> {
+  async getDraftPlan(ownerId: string, id: string): Promise<DraftPlanDetails> {
     const plan = await this.prisma.draftPlan.findFirst({
       where: {
         id,
+        ownerId,
         deletedAt: null,
       },
       include: {
@@ -106,8 +113,8 @@ export class DraftPlansService {
     return toDraftPlanDetails(plan);
   }
 
-  async addBanEntry(planId: string, dto: AddBanEntryDto) {
-    await this.assertPlanExists(planId);
+  async addBanEntry(ownerId: string, planId: string, dto: AddBanEntryDto) {
+    await this.assertPlanExists(ownerId, planId);
     await this.assertHeroExists(dto.heroId);
 
     try {
@@ -123,11 +130,16 @@ export class DraftPlansService {
       this.handleKnownErrors(error);
     }
 
-    return this.getDraftPlan(planId);
+    return this.getDraftPlan(ownerId, planId);
   }
 
-  async updateBanEntry(planId: string, entryId: string, dto: UpdateBanEntryDto) {
-    await this.findEntry(planId, entryId, DraftPlanEntryType.BAN);
+  async updateBanEntry(
+    ownerId: string,
+    planId: string,
+    entryId: string,
+    dto: UpdateBanEntryDto,
+  ) {
+    await this.findEntry(ownerId, planId, entryId, DraftPlanEntryType.BAN);
 
     await this.prisma.draftPlanHeroEntry.update({
       where: { id: entryId },
@@ -136,11 +148,11 @@ export class DraftPlansService {
       },
     });
 
-    return this.getDraftPlan(planId);
+    return this.getDraftPlan(ownerId, planId);
   }
 
-  async deleteBanEntry(planId: string, entryId: string) {
-    await this.findEntry(planId, entryId, DraftPlanEntryType.BAN);
+  async deleteBanEntry(ownerId: string, planId: string, entryId: string) {
+    await this.findEntry(ownerId, planId, entryId, DraftPlanEntryType.BAN);
 
     await this.prisma.draftPlanHeroEntry.update({
       where: { id: entryId },
@@ -149,11 +161,11 @@ export class DraftPlansService {
       },
     });
 
-    return this.getDraftPlan(planId);
+    return this.getDraftPlan(ownerId, planId);
   }
 
-  async addPreferredPick(planId: string, dto: AddPreferredPickDto) {
-    await this.assertPlanExists(planId);
+  async addPreferredPick(ownerId: string, planId: string, dto: AddPreferredPickDto) {
+    await this.assertPlanExists(ownerId, planId);
     await this.assertHeroExists(dto.heroId);
 
     try {
@@ -171,15 +183,16 @@ export class DraftPlansService {
       this.handleKnownErrors(error);
     }
 
-    return this.getDraftPlan(planId);
+    return this.getDraftPlan(ownerId, planId);
   }
 
   async updatePreferredPick(
+    ownerId: string,
     planId: string,
     entryId: string,
     dto: UpdatePreferredPickDto,
   ) {
-    await this.findEntry(planId, entryId, DraftPlanEntryType.PREFERRED);
+    await this.findEntry(ownerId, planId, entryId, DraftPlanEntryType.PREFERRED);
 
     await this.prisma.draftPlanHeroEntry.update({
       where: { id: entryId },
@@ -190,11 +203,11 @@ export class DraftPlansService {
       },
     });
 
-    return this.getDraftPlan(planId);
+    return this.getDraftPlan(ownerId, planId);
   }
 
-  async deletePreferredPick(planId: string, entryId: string) {
-    await this.findEntry(planId, entryId, DraftPlanEntryType.PREFERRED);
+  async deletePreferredPick(ownerId: string, planId: string, entryId: string) {
+    await this.findEntry(ownerId, planId, entryId, DraftPlanEntryType.PREFERRED);
 
     await this.prisma.draftPlanHeroEntry.update({
       where: { id: entryId },
@@ -203,13 +216,14 @@ export class DraftPlansService {
       },
     });
 
-    return this.getDraftPlan(planId);
+    return this.getDraftPlan(ownerId, planId);
   }
 
-  private async assertPlanExists(id: string) {
+  private async assertPlanExists(ownerId: string, id: string) {
     const plan = await this.prisma.draftPlan.findFirst({
       where: {
         id,
+        ownerId,
         deletedAt: null,
       },
       select: { id: true },
@@ -231,13 +245,22 @@ export class DraftPlansService {
     }
   }
 
-  private async findEntry(planId: string, entryId: string, type: DraftPlanEntryType) {
+  private async findEntry(
+    ownerId: string,
+    planId: string,
+    entryId: string,
+    type: DraftPlanEntryType,
+  ) {
     const entry = await this.prisma.draftPlanHeroEntry.findFirst({
       where: {
         id: entryId,
         draftPlanId: planId,
         type,
         deletedAt: null,
+        draftPlan: {
+          ownerId,
+          deletedAt: null,
+        },
       },
     });
 
